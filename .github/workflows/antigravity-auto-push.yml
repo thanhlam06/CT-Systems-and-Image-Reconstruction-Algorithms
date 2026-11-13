@@ -1,0 +1,32 @@
+name: CT Simulator CI & Auto-Sync Workflow
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  verify-and-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install Core Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install numpy scipy scikit-image matplotlib Pillow
+
+      - name: Verify Core CT Reconstruction Pipeline
+        run: |
+          python -c "from ct_sim.physics import ScanParams, simulate_scan; from ct_sim import recon; sc = simulate_scan('Đầu (HU)', 64, ScanParams(n_views=60)); r = recon.fbp(sc.sino, sc.theta, 'ramp'); assert r.shape == (64, 64); print('Core CT pipeline verified:', r.shape)"
